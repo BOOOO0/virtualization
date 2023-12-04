@@ -77,3 +77,17 @@
 ### Host-only 어댑터
 
 - VirtualBox는 기본 NAT 네트워크 어댑터에 포트포워딩이 필요한데 Host-Only 어댑터의 ip를 사용하면 포트 포워딩을 생략할 수 있다.
+
+### systemctl enable
+
+- 인스턴스 재시작 이후 자동으로 데몬이 실행되도록 할 수 있다. `systemctl enable httpd`
+
+- enable + 지금 재시작은 `systemctl enable --now httpd`
+
+### NAT network
+
+- NAT와 NAT network는 다르다.
+
+- VirtualBox는 가상 머신에 IP를 부여할 때 MAC 주소를 기준으로 부여한다.
+
+- NAT와 NAT network가 다른 점은 이 MAC 주소를 다르게 했을 때 서로 다른 두 가상 머신의 NAT network에 대한 IP 주소가 다르게 할당되는 점이다. NAT의 경우 다 동일하다. 
