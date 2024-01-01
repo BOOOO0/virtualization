@@ -68,8 +68,74 @@
 
 ## DNS (Domain Name System)
 
-## 데이터스토어
+- 도메인 네임 시스템은 호스트의 IP 주소를 도메인 주소로 변경하고 도메인 주소를 IP 주소로 변경하기 위해 고안되었다.
 
-## HAProxy
+### DNS 구성 요소
+
+#### Domain Name Space
+
+- 도메인 네임은 트리 형태로 계층 구조를 가지고 있다.
+
+- 이 규칙 자체를 의미하는 말로 루트 서버가 TLD 서버에 대한 정보를 가지고 있고 TLD 서버가 2차 도메인 서버에 대한 정보를 가지고 있도록 해서 계층 구조를 형성해 분산시키는 규칙이다.
+
+#### Name Server
+
+- DNS 서버 그 자체를 의미하며 리눅스에선 bind, 윈도우에선 MS DNS 를 사용해서 구축된 서버이며 도메인 네임에 대한 쿼리에 IP 주소를 응답한다.
+
+#### Resolver
+
+- 사용자의 DNS 쿼리 요청을 받아 다른 네임 서버들과 통신하는 역할을 하는 서버로 DNS 전체 동작에서 클라이언트의 역할을 한다.
+
+- Local DNS(기지국 서버), Recursive DNS Server, Recursor와 동의어로 볼 수 있다. 이후 DNS 동작 방식에서 후술
+
+### DNS 동작 방식
+
+- 사용자가 www.naver.com을 검색하면 Local DNS가 그 요청을 받는다.
+
+- Local DNS는 우선 자신에게 캐싱되어 있는지 확인하고 있다면 바로 응답을 보내고 없다면 루트 도메인에 쿼리를 보낸다.
+
+- 루트 도메인에서 .com Top Level Domain에 대한 정보를 Local DNS로 보내고 Local DNS는 그 TLD에 다시 쿼리를 보낸다.
+
+- TLD는 naver.com 2차 도메인에 대한 정보를 Local DNS로 보내고 Local DNS는 다시 그 2차 도메인 서버에 쿼리를 보낸다.
+
+- 2차 도메인 서버는 여기서 네이버에서 구축한 네임 서버 혹은 호스팅하는 도메인 업체의 네임 서버로 Local DNS에 서브 도메인을 포함한 www.naver.com의 정보를 가지고 있고 그 도메인의 IP를 Local DNS로 보낸다.
+
+- 이제 Local DNS가 사용자에게 IP를 알려주고 사용자는 IP를 통해 HTTP, HTTPS 요청을 보낸다.
 
 ## vSphere
+
+- vSphere는 엔터프라이즈급의 가상화 플랫폼이다.
+
+- vSphere는 그 자체로 하나의 소프트웨어를 의미하는 것은 아니고 ESXi, vCenter와 같은 기술들을 통칭하는 의미이다.
+
+### ESXi
+
+- ESXi는 VMware에서 개발한 Type 1 Hypervisor이다.
+
+- 타입 1 하이퍼바이저이기 때문에 OS 없이 베어메탈로 설치될 수 있으며 리소스 가상화와 관리에 용이하다.
+
+### vCenter
+
+- vCenter는 중앙 집중식 관리 플랫폼으로 다수의 ESXi, 그 안에 포함되는 모든 리소스를 중앙 관리하기 위한 소프트웨어이다.
+
+- vMotion을 통해 ESXi간 마이그레이션을 지원하고 고가용성을 위한 HA와 내결함성 FT를 제공한다.
+
+- vMotion은 마이그레이션을 하는 동안 패킷 손실이 거의 없다는 장점이 있다.
+
+- DRS (Distributed Resource Scheduler) 기능을 통해 한 클러스터(한 ESXi)에 리소스가 몰리고 다른 클러스터의 리소스는 남는 상황이라면 자동으로 마이그레이션을 해서 분산을 시키는 기능이다.
+
+- DRS 임계값마다 DRS 작동 민감도가 다르다.(1~5단계로 나뉜다.)
+
+- 고가용성을 위해 HA 기능을 지원한다. HA는 ESXi 1 클러스터와 ESXi 2 클러스터가 있다고 가정했을때 ESXi 1에 생성된 서버가 ESXi 1이 갑자기 종료된 경우 ESXi 2로 마이그레이션되어 배포 상태가 유지되도록 하는 기능이다.
+
+- 장애가 발생한 클러스터의 VM들이 대체 클러스터에서 실행될 수 있도록 하는 것이다.
+
+- FT(Fault Tolerance) 기능은 HA에서 발생하는 패킷 손실을 방지하고 더 빠른 재해 복구를 위해 고안되었다.
+
+- 모든 ESXi에 대해 적용할 수는 없고 제한이 있다.
+
+- VM을 생성하면 그 VM에 대한 Stand By VM이 생성되는데 정확한 명칭은 FT에서는 Active VM과 Hot-Stand By VM으로 나뉘며 더 적극적인 대체 VM이라는 표현으로 보인다.
+
+- Active VM의 정보가 Hot-Stand By VM에 지속적으로 동기화되며 Active VM에 문제가 생기면 Hot-Stand By가 Active VM이 되어 배포 상태를 유지한다.
+
+## RFC 1918
