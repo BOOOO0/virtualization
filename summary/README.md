@@ -52,6 +52,8 @@
 
 - **_의문이 들었던 점은 어떻게 DHCP 서비스가 설치되지 않은 서버 인스턴스가 생성되자마자 DHCP Discover를 보낼까? 였는데 네트워크가 초기화될때 DHCP Discover를 Broadcast한다고 한다. 아마 위 내용은 DHCP 서비스를 통해서가 아니라 네트워크 서비스를 통해서인 것 같다._**
 
+- **_강사님의 답변은 시스템에서 DHCP로 할당이 설정되어 있다면 그러니까 VM이면 VM 네트워크 설정에서 DHCP가 설정되어 있다면 서버가 생성될때 자동으로 255 Broadcast를 보내도록 되어있고 서버 인스턴스 내부의 주체는 생각할 필요가 없다는 것이였다._**
+
 - DHCP 서버는 자신이 가진 IP 풀에서 할당되지 않은 IP를 ICMP로 확인한 다음 클라이언트에게 사용해도 좋을 네트워크 설정(MAC, IP, 서브넷 마스크, 게이트웨이, DNS, DHCP 서버의 네트워크 정보)의 제안을 DHCP Offer (UDP/목적지 포트 번호 68번)를 Broadcast 혹은 Unicast로 보낸다.
 
 - DHCP Offer가 Broadcast일지 Unicast일지는 DHCP Discover의 메세지 내 Broadcast Flag의 값에 따라 달라지며 Broadcast Flag가 1이면 Broadcast로 보내고 0이면 Unicast로 보낸다.
