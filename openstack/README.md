@@ -8,6 +8,10 @@
 
 - 오픈스택 설치시 가상의 브릿지 네트워크 인터페이스가 생기며 그 중 br-ex가 기존 VM의 NAT 인터페이스가 가진 IP와 네트워크 정보를 가지고 게이트웨이와 연결된 vSwitch의 역할을 하며 내부와 외부의 트래픽이 서로 오고 갈 수 있도록 해준다.
 
+- 오픈스택 내의 인스턴스와 통신하려면 external <-> internal을 연결하는 라우터가 가리키는 외부 게이트웨이를 통해서 해야 한다.
+
+- `systemctl is-active openstack-*`
+
 - **_위 네트워크 구조는 나중에 시간 될때 다시 정리_**
 
 - 프로젝트 단위로 구분되어 그 안에 neutron 네트워크를 구성할 수 있다. 프로젝트를 리전으로 볼 수 있다??
@@ -64,6 +68,8 @@
 
 - 룰은 허용할 White List만 명시한다.
 
+- AWS SG와 마찬가지로 특정 SG를 대상으로 하는 규칙 설정이 가능하며 이를 통해 특정 SG에 대한 룰 외의 Source를 차단하여 보안성을 높인 아키텍처를 구축할 수 있다.
+
 ## Glance
 
 - AWS AMI처럼 인스턴스의 베이스 이미지를 설정할 수 있다.
@@ -73,3 +79,78 @@
 ## Key Pair
 
 - AWS의 인스턴스 키 페어와 거의 동일하다.
+
+## Nova
+
+- EC2 인스턴스를 생성하는 것과 비슷하게 인스턴스 타입과 미리 생성해둔 Glance 이미지를 선택하고 속할 네트워크, 서브넷을 선택하고 생성해둔 보안 그룹을 적용하고 사용할 키 페어를 설정한다.
+
+- 인스턴스 생성 시 구성 항목에서 AWS EC2 User Data처럼 인스턴스가 시작할 때 실행될 자동화 스크립트를 사용할 수 있다.
+
+- 인스턴스 생성에 필요한 이미지를 Openstack.org에서 찾아서 사용할 수 있다. 이미지 파일 포멧은 .img, .qcow2 모두 QCOW2 포멧으로 취급된다.
+
+## Cinder
+
+- Cinder는 AWS EBS와 같이 인스턴스와 직접 연결되는 기본 블록 스토리지이다.
+
+- 스냅샷, 볼륨 복제 등의 백업 기능을 지원한다.
+
+- 생성된 볼륨 ID를 사용자가 구분하기 쉽게 변경할 수 있다.
+
+### Cinder와 Nova의 연동
+
+- Nova 인스턴스의 생성시 블록 스토리지를 포함하고 있다면 Cinder 블록 스토리지가 생성이되고 `nova volume-attach` 명령을 통해 인스턴스에 붙고 이때 스토리지의 연결은 iSCSI로 연결된다.
+
+- 생성된 Cinder가 하나의 iSCSI 스토리지이고 iSCSI 연결과 같은 논리로 Nova 인스턴스에 연결되어 있는 것이다.
+
+## Swift
+
+- Swift는 AWS S3와 같은 오브젝트 스토리지이다.
+
+- 각 객체는 고유한 식별자인 URL을 가지고 있다.
+
+- Swfit를 포함해 모든 오브젝트 스토리지는 용량이 큰 고해상도의 이미지나 영상 등의 파일들을 저장하기 위해 사용된다.
+
+- Swift 내 오브젝트 파일의 그룹의 단위는 컨테이너이고 S3의 버킷과 같다.
+
+- public access 항목을 체크하면 링크가 생기고 그 링크를 통해 Swift 컨테이너 내의 객체에 접근이 가능하다.
+
+- ![image](../img/curlswift.PNG)
+
+- 상대경로로 작성된 파일 내의 경로가 컨테이너 내에서도 적용이 된다. Swift 내에 배포할 정적 파일을 올바르게 배치하면 엔트리 포인트 html 파일의 Swift URL로 접속하면 동일하게 배포된 것을 확인할 수 있다.
+
+## Heat
+
+- Openstack에서 제공되는 IaC 툴이다. AWS CloudFormation과 유사하다.
+
+- 작성 방식은 간단하다. heat template의 버전을 명시하고 생성할 리소스를 명시하고 세부적인 프로퍼티를 명시한다.
+
+- 서버를 생성한다면 다음과 같다.
+
+```yaml
+heat_template_version: "2018-08-31"
+resources:
+  Server_web:
+    type: "OS::Nova::Server"
+    properties:
+      security_groups:
+        - "a22046bd-1008-4700-884e-470e0aa2f5b9"
+      networks:
+        - subnet: "12875d1e-2b01-4cd2-a839-a1b68fbec3c3"
+      name: "webserver"
+      flavor: "m1.micro"
+      image: "a59ed042-3356-453a-a752-2f0c0b9e7bdf"
+      availability_zone: "nova"
+      key_name: "webui-key"	
+```
+
+- **_한 템플릿으로 생성되는 리소스들은 하나의 스택 단위로 묶여있다. 오픈스택 웹에서 Heat 스택을 삭제하면 그 템플릿으로 생성한 리소스도 같이 삭제된다._**
+
+- yaml 스크립트 작성 외에도 웹 UI에서 템플릿을 더 쉽게 작성할 수도 있다.
+
+- ![image](../img/templateui.PNG)
+
+- ![image](../img/templatettalkkak.PNG)
+
+## Designate
+
+- Openstack이 제공하는 DNS 서비스이다.
